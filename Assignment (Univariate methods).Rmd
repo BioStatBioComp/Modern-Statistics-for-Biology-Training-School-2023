@@ -1,0 +1,76 @@
+---
+title: "Assignment Univariate Methods"
+author: "xxx"
+date: "18/10/2023"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+
+################## ASSIGNMENT ####################
+
+## Introduction on Acupuncture data
+
+For this assignment we will be using the Acupuncture data (acup_data.csv). The dataset contains data from a randomized study comparing acupuncture with placebo in the treatment of severe headache. The outcome studied here is the general health, measured as one of the sub-scales of the SF-36 health status questionnaire. A low value indicates poor general health. A high value indicates good general health. A detailed description of the study can be found in Vickers et al. (BMJ Online, 2004, doi: 10.1136/bmj.38029.421863.EB).
+
+Here we consdier data for the general health measured at 3 months after study initiation. Covariates that were believed to influence headache severity are age, and the frequency of headaches. 
+
+Of key interest is to study Whether the average general health is different for placebo patients and for patients receiving acupuncture. We will assume no difference for general health between groups at baseline.
+
+
+## Data file
+
+File in Datasets: acup_data.csv
+
+- Variables:
+
+1. ID: identification number
+
+2. GROUP: treatment allocation (0: placebo, 1: acupuncture)
+
+3. AGE: age of patient at baseline
+
+4. FREQUENCY: number of days with headache per month at baseline
+
+5. GENHEALTH: general health
+ 
+
+ 
+## Assignment
+
+1. Read the data in R and summarize them. Use graphical techniques to explore the data. Summarize your findings. 
+
+2. Perform a statistical method to show if there is a difference for the average general health at 3 months between placebo and acupuncture. 
+
+3. Fit a statistical model to show if the frequency of headaches affects/predicts the general health.
+
+4. Create a categorical variable for frequency from the continuous form of it using the following intervals:
+
+[0-7] Low; [8-17] Moderate; [18-28] High
+
+Now compare the general health in these groups using a statistical method. What is your conclusion? 
+
+## Remarks
+
+- For each question, motivate your choice of techniques, estimation methods, assumptions
+you make, and describe possible, problems.
+
+- For each of the above questions, summarize your conclusions and document them as a report to a
+clinician.
+
+
+- Work on your workspace and document your project in an R Markdown or Notebook file.
+
+
+
+```{r, echo=FALSE}
+library(readr)
+#Save the data you have in datasets in your working space and read it with this code:
+acup_data <- read_csv("acup_data.csv", 
+     col_types = cols(age = col_number(), 
+         frequency = col_number(), 
+        genhealth = col_number(), group = col_number()))
+
+```
+

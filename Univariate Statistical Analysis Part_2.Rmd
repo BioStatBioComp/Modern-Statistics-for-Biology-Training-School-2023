@@ -1,0 +1,175 @@
+---
+title: "Correlation and Regression"
+author: "Eliana Ibrahimi"
+date: "2023-10-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+####################  CORRELATION ###################
+
+### Read the data
+```{r}
+
+library(readxl)
+ageandheight <- read_excel("Datasets/ageandheight.xls") #Upload the data
+
+print(ageandheight)
+
+```
+
+
+The Pearson product-moment correlation coefficient (Pearson's correlation, for short) is used to measure the strength and direction of association between two continuous variables.
+
+In our example, we could use a Pearson's correlation to understand whether there is an association between age and height.
+
+
+### Test for normality
+
+```{r}
+
+shapiro.test(ageandheight$age)
+shapiro.test(ageandheight$height)
+```
+
+
+### COmpute the Pearson correlation coefficient 
+```{r}
+cor.test(ageandheight$age,ageandheight$height, method=c("pearson"))
+
+```
+
+### Visualize your results with 95% CI included
+```{r}
+library("ggpubr")
+ggscatter(ageandheight, x = "age", y = "height", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "Age", ylab = "Height")
+```
+
+### Documentation
+
+There was a strong positive correlation between age and height, r = 0.99. 
+An increase in age led to an increase in height, r(10) = 0.99, p < 0.0001.
+
+
+
+
+############################    SIMPLE LINEAR REGRESION   ##############################
+
+
+## Simple linear regression 
+
+
+Linear regression it is used when we want to predict the value of a dependent/outcome variable based on the value of another independent/predictor variable. In our example, we will use linear regression to understand whether height (in inches) can be predicted based on age.
+
+### Read the data
+```{r}
+
+library(readxl)
+ageandheight <- read_excel("Datasets/ageandheight.xls") #Upload the data
+
+print(ageandheight)
+
+```
+
+### Visualize the data
+
+## Boxplots to check for outliers
+```{r}
+
+par(mfrow=c(1, 2))  # divide graph area in 2 columns
+boxplot(ageandheight$age, main="Age", sub=paste("Outlier rows: ", boxplot.stats(ageandheight$age)$out))  # box plot for age
+boxplot(ageandheight$height, main="Height", sub=paste("Outlier rows: ", boxplot.stats(ageandheight$height)$out))  # box plot for 'height'
+
+```
+- There are no outliers in the data.
+
+
+
+### Scatterplot to see if there is a trend for linear relationship
+
+```{r}
+plot(ageandheight$height~ageandheight$age, xlab="Age", ylab="Height", pch = 16, col = "red")
+
+
+```
+
+
+
+### Perform linear regression
+```{r}
+lmHeight = lm(height~age, data = ageandheight) #Create the linear regression
+
+summary(lmHeight) #Review the results
+
+```
+
+- Interpretation of the coefficients
+
+
+### Documentation
+A linear regression established age could significantly predict height, F(1,10) =880, p < 0.0001 and age accounted for 98.8 % (R squre=0.988) of the explained variability in height. The regression equation was: predicted height = 64.92 + (0.635 * age). 
+
+Note:
+
+In the output, you can see the values of the intercept (alfa value) and the slope (beta value) for the age. If there is a child that is 20.5 months old, alfa is 64.92 and b is 0.635, the model predicts (on average) that its height in centimeters is around 64.92 + (0.635 * 20.5) = 77.93 cm.
+
+
+### Extract fitted/predicted values
+```{r}
+#Extract fitted values
+
+lmHeight$fitted.values
+plot(ageandheight$height~lmHeight$fitted.values, xlab="Predicted values", ylab="Observed values", pch = 16, col = "red")
+```
+
+
+### Model fit diagnostic
+```{r}
+plot(lmHeight$residuals, pch = 16, col = "red")
+qqnorm(lmHeight$residuals, pch = 16, col = "red")
+qqline(lmHeight$residuals, pch = 16, col = "red")
+```
+
+You don't see any clear patterns on your residuals, which is good!
+
+
+
+############################    MULTIPLE  LINEAR REGRESION   ##############################
+
+
+
+```{r}
+# Read the data
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+## References
+
+
+https://www.datacamp.com/community/tutorials/linear-regression
+
+http://www.sthda.com/english/wiki/correlation-test-between-two-variables
+
+https://statistics.laerd.com/
+

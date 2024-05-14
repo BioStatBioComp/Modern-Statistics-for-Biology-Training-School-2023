@@ -1,0 +1,118 @@
+---
+title: "MANOVA"
+author: "Eliana ibrahimi"
+date: "2023-10-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Multivariate Analysis of Variance (MANOVA)
+
+```{r}
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+library(car)
+library(broom)
+```
+
+We'll use iris data set:
+
+```{r}
+# Store the data in the variable my_data
+my_data <- iris
+my_data
+
+scaledata = scale(my_data[,1:4])
+print(scaledata)
+```
+
+## Dependent variables
+
+As MANOVA cares for the difference in means for each factor, let's visualize the boxplot for every dependent variable.
+
+```{r}
+ggboxplot(
+  my_data, x = "Species", y = c("Sepal.Length", "Petal.Length", "Sepal.Width", "Petal.Width"), 
+  merge = TRUE, palette = "jco"
+  )
+```
+
+Summary statistics
+
+```{r}
+my_data %>%
+  group_by(Species) %>%
+  get_summary_stats(Sepal.Length, Petal.Length, type = "mean_sd")
+```
+
+## Assumptions
+
+1.  Adequate sample size: the n in each cell \> the number of dependent variables.
+2.  Multivariate normality
+
+```{r}
+my_data %>%
+  select(Sepal.Length, Petal.Length, Sepal.Width, Petal.Width) %>%
+  mshapiro_test()
+```
+
+Test significant, multivariate normality violated.
+
+## Linearity assumption for each group
+
+```{r}
+# Create a scatterplot matrix by group
+library(GGally)
+results <- my_data %>%
+  select(Sepal.Length, Petal.Length, Petal.Width, Sepal.Width, Species) %>%
+  group_by(Species) %>%
+  doo(~ggpairs(.) + theme_bw(), result = "plots")
+results
+
+# Show the plots
+results$plots
+```
+
+## Homogeneity of variances
+
+```{r}
+my_data %>% 
+  gather(key = "variable", value = "value", Sepal.Length, Petal.Length, Sepal.Width, Petal.Width) %>%
+  group_by(variable) %>%
+  levene_test(value ~ Species)
+```
+
+Some assumptions VIOLATED, Transform the dependent variables... or perform [PERMANOVA](https://www.rdocumentation.org/packages/PERMANOVA/versions/0.2.0/topics/PERMANOVA)
+
+### **One-way MANOVA in R**
+
+We can now perform a one-way MANOVA in R. The best practice is to separate the dependent from the independent variable before calling the manova() function. Once the test is done, you can print its summary:
+
+```{r}
+dependent_vars <- cbind(my_data$Sepal.Length, my_data$Sepal.Width, my_data$Petal.Length, my_data$Petal.Width)
+
+independent_var <- my_data$Species
+
+manova_model <- manova(dependent_vars ~ independent_var, data = my_data)
+summary(manova_model)
+
+
+```
+
+By default, MANOVA in R uses Pillai's Trace test statistic. The P-value is very close to zero, which means we can safely reject the null hypothesis in the favor of the alternative one -- at least one group mean vector differs from the rest.
+
+#Now scale the data and repeat yourself the analysis
+
+```{r}
+x=scale(iris[,1:4])
+```
+
+References
+
+<https://www.r-bloggers.com/2022/01/manova-in-r-how-to-implement-and-interpret-one-way-manova/>
+
+<https://www.datanovia.com/en/lessons/one-way-manova-in-r/>

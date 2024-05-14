@@ -1,0 +1,66 @@
+---
+title: "NHANES project challenge"
+author: "Eliana Ibrahimi, Alise Ponsero, Marta B. Lopes"
+date: "2023-10-13"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## The problem
+
+Sleep disorder is a highly prevalent disorder among US adults and
+despite advancements in treatment options, prevalence rates are
+increasing. We want to assess the relationship between sleep disorder
+and predictors which are reported to impact sleep disorder. 
+
+## The dataset
+
+A sample of n = 24118 adults from the National Health and Nutrition
+Examination Survey (NHANES) from 2008 to 2018.
+
+#### Variables and codding
+
+Sleep disorder: 1=Yes, 0=No
+
+BMI numeric
+
+Age numeric
+
+BMI categorical: 2=Normal, 1=Underweight, 3=Overweight, 4=Obese
+
+Age categorical: 1=18-29, 2=30-49, 3=50-69, 4= ≥70
+
+Gender: 1=Male, 2=Female
+
+Marital status: 1=Married/Living with Partner, 2=Widowed,
+3=Divorced/Separated, 4=Never married
+
+Race: 1=Hispanic, 2=White, 3=Black, 4=Other
+
+Diet: 1=Good to Excellent, 2=Poor to fair,
+
+Physical Activity (Vigorous), 1=Yes, 2=No
+
+Smoking: 1=Current smoker, 2=Former smoker, 3=Never smoker
+
+Mental health (depression): 1=Not at all, 2=Several days, 3=More than
+half the days, 4=Nearly every day
+
+General health: 1=Very good to excellent, 2=Good, 3=Fair to poor
+
+```{r}
+#Load the data
+
+data=read.csv("data_nhanes_msb.csv")
+data
+```
+
+### The challenge
+
+### 

@@ -1,0 +1,430 @@
+---
+title: "Data Exploration"
+author: "Eliana Ibrahimi"
+date: "2023-10-04"
+output: html_document
+---
+
+## Introduction to R
+
+"R is an environment, based on S plus language, within which many classical and modern statistical techniques have been implemented. A few of these are built into the base R environment, but many are supplied as packages. There are about 25 packages supplied with R and many more are available through the CRAN family of Internet sites (via https://CRAN.R-project.org) and elsewhere. Most classical statistics and much of the latest methodology is available for use with R, but users may need to be prepared to do a little work to find it." (W. N. Venables, D. M. Smith and the R Core Team., 2018) - Check the R-intro document in Open Source Materials/Hands-on Biostatistics in Drive for more infortmation. 
+
+
+## Start with R
+
+### Working directory
+
+1. Create a sub-directory named "R" in your "Documents" folder. 
+
+2. From RStudio, use the menu to change your working directory under Session > Set Working Directory > Choose Directory. Choose the directory you've just created in step 1
+
+
+You can run the code below to set working directory also.
+
+```{r}
+#setwd("C:/Users/user/Desktop/HOB(2020)/R") #set working directory
+
+#getwd() # Shows the working directory (wd)
+#setwd(choose.dir()) # Select the working directory interactively
+#setwd("C:/myfolder/data") # Changes the wd
+#setwd("H:\\myfolder\\data") # Changes the wd
+```
+
+
+
+
+### Installing/loading packages/
+
+R packages are collections of functions and data sets developed by the community. 
+
+```{r, include=FALSE}
+
+#Install the following packages:
+
+#install.packages("foreign")
+#library(foreign) #load the package 
+install.packages("car")
+#install.packages("Hmisc")
+#install.packages("reshape")
+
+#Install multiple packages at once
+
+#install.packages(c("slidify", "ggplot2", "devtools"))
+
+
+#load package
+
+library(car) #will load the car package
+
+#http://cran.r-project.org/web/views/
+```
+
+
+### Getting help
+
+"Before asking others for help, it's generally a good idea for you to try to help yourself. R includes extensive facilities for accessing documentation and searching for help. There are also specialized search engines for accessing information about R on the internet, and general internet search engines can also prove useful" (https://www.r-project.org/help.html). 
+
+```{r}
+?plot # Get help for an object. You can also type: help(plot)
+
+#??regression # Search the help pages for anything that has the word "regression". You can also type:
+
+#help.search("regression")
+
+
+#help(package=car) # View documentation in package car. You can also type: library(help="car")
+
+```
+
+
+## Read/import data in R 
+
+### Option 1
+
+You can add your data as vectors and create the dataframe using the data.frame() function as follows.
+
+```{r}
+
+
+# Data in two numeric vectors
+
+women_weight <- c(38.9, 61.2, 73.3, 21.8, 63.4, 64.6, 48.4, 48.8, 48.5)
+men_weight <- c(67.8, 60, 63.4, 76, 89.4, 73.3, 67.3, 61.3, 62.4) 
+
+# Create a data frame
+
+my_data <- data.frame( 
+  group = rep(c("Woman", "Man"), each = 9), 
+  weight = c(women_weight,  men_weight)
+)
+
+# Saving all objects to file *.RData
+save.image("my_data.RData") 
+
+```
+
+
+
+### Option 2: Import or read your data from excel, csv.
+
+```{r}
+
+# Read csv file above my_data
+library(readr)
+my_data <- read_csv("my_data.csv")
+View(my_data)
+
+
+# Read csv file from PC storage 
+#my_data2<- read.csv("C:/Users/user/Desktop/R/my_data.csv")
+
+#Read excel file
+#library(readxl) #Load the readxl package, if not installed, do that before.
+#my_data3<- read_excel("C:/Users/user/Desktop/HOB(2020)/R/my_data.xlsx")
+
+#Data can be imported from Environment-Import dataset as well
+
+```
+
+
+### Option 3: Load data from R
+
+```{r}
+
+# Load the data saved as RData in option 1
+load("my_data.RData") #Add path to data if necessary
+
+
+```
+
+
+## Export/write the data in other formats
+
+```{r}
+
+#Write the dataframe as csv file
+write.csv(my_data, "C:/Users/user/Desktop/HOB(2020)/R/my_data.csv")
+
+
+#Write the dataframe as .txt file
+write.table(my_data, file = "my_data.txt", sep = "\t")
+
+```
+
+## Data exploration
+
+```{r}
+
+summary(my_data) # Provides basic descriptive statistics and frequencies.
+edit(my_data) # Open data editor
+str(my_data) # Provides the structure of the dataset
+names(my_data) # Lists variables in the dataset
+head(my_data) # First 6 rows of dataset
+head(my_data, n=4)# First 4 rows of dataset
+head(my_data, n= -3) # All rows but the last 3
+tail(my_data) # Last 6 rows
+tail(my_data, n=5) # Last 5 rows
+tail(my_data, n= -5) # All rows but the first 5
+my_data[1:5, ] # First 5 rows
+my_data[1:5,1:2] # First 5 rows of data of the first 2 variables
+
+```
+
+
+
+### Missing data
+
+```{r}
+rowSums(is.na(my_data)) # Number of missing per row
+colSums(is.na(my_data)) # Number of missing per column/variable
+
+# Convert to missing data
+my_data[my_data$weight=="& ","weight"] <- NA # NOTE: Notice hidden spaces.
+my_data[my_data$weight==999,"weight"] <- NA
+
+# The function complete.cases() returns a logical vector indicating which cases are complete.
+# list rows of data that have missing values
+my_data[!complete.cases(my_data),]
+
+# The function na.omit() returns the object with listwise deletion of missing values.
+# Creating a new dataset without missing data
+my_data1 <- na.omit(my_data)
+```
+
+
+### Value labels/recode variables
+
+```{r}
+
+#Read data from ecxel. 
+library(readxl)
+my_data_num <- read_excel("my_data.num.xlsx")
+
+
+# Use factor() for nominal data
+my_data_num$group <- factor(my_data_num$group, levels = c(1,2), labels = c("male", "female"))
+
+
+# Use ordered() not factor() for ordinal data
+```
+
+
+
+### Creating ids/sequence of numbers
+
+```{r}
+# Creating a variable with a sequence of numbers from 1 to n (where ‘n’ is the total number of observations)
+my_data$id <- seq(dim(my_data)[1])
+my_data
+```
+
+
+### Recoding variables/creating categories
+
+```{r}
+library(car)
+my_data$weight.rec <- recode(my_data$weight, 
+"30:50='30-50';
+51:70='51-70';
+71:90='71-90'")
+my_data$weight.rec <- as.factor(my_data$weight.rec)
+```
+
+### Sort data; Deleting variables
+
+```{r}
+
+#Sort data by weight.rec
+my_data.sorted <- my_data[order(my_data$weight.rec),]
+
+#Delete variables
+my_data$weight.rec <- NULL
+
+
+```
+
+
+### Subseting the data
+
+```{r}
+mydata3 <- subset(my_data, weight >= 20 & weight <= 50)
+mydata4 <- subset(my_data, weight >= 20 & weight <= 50, select=c(id, weight))
+
+mydata5 <- subset(my_data, group=="Woman" & weight >= 70)
+mydata6 <- subset(my_data, group=="Woman" & weight == 70)
+```
+
+
+### Categorical data: Frequencies/Crosstabs
+
+```{r}
+
+#Frequencies
+table(my_data$group)
+
+
+# Two-way tables/ crosstabs
+
+library(readr)
+data <- read_csv("chi-square.csv", 
+    col_types = cols(id = col_number(), improvement = col_character(), 
+        treatment = col_character()))
+
+#Create crosstab
+dt<- table(data$treatment, data$improvement)
+dt
+
+addmargins(dt) # Adding row/col margins
+
+#Calculate proportions
+round(prop.table(dt,1), 2) # Round col prop to 2 digits
+round(100*prop.table(dt,1), 2) # Round col prop to 2 digits (percents)
+addmargins(round(prop.table(dt,1), 2),2) # Round col prop to 2 digits
+
+round(prop.table(dt,2), 2) # Round column prop to 2 digits
+round(100*prop.table(dt,2), 2) # Round column prop to 2 digits (percents)
+addmargins(round(100*prop.table(dt,2), 2),1) # Round col prop to 2 digits
+
+round(prop.table(dt),2) # Tot proportions rounded
+round(100*prop.table(dt),2) # Tot proportions rounded
+```
+
+### Numerical data
+
+Descriptive Statistics
+
+```{r}
+
+summary(my_data) # Summary of all numeric variables
+
+mean(my_data$weight) #mean
+median(my_data$weight) #median
+var(my_data$weight) # Variance
+sd(my_data$weight) # Standard deviation
+max(my_data$weight) # Max value
+min(my_data$weight) # Min value
+range(my_data$weight) # Range
+quantile(my_data$weight) # Quantiles 25%
+quantile(my_data$weight, c(.3,.6,.9)) # Customized quantiles
+
+
+length(my_data$weight) # Num of observations when a variable is specify
+length(my_data$weight) # Number of variables when a dataset is specify
+
+table(my_data$group)
+names(sort(-table(my_data$group)))[1]
+
+```
+
+
+Descriptive statistics by groups
+
+```{r}
+# Descriptive statistics by groups using --tapply--
+mean <- tapply(my_data$weight,my_data$group, mean, na.rm=TRUE)
+sd <- tapply(my_data$weight,my_data$group, sd)
+median <- tapply(my_data$weight,my_data$group, median)
+max <- tapply(my_data$weight,my_data$group, max)
+
+table <- round(cbind(mean, median, sd, max),digits=1)
+table
+```
+
+
+
+## Confidence intervals for the mean
+
+
+```{r}
+
+#install.packages(distributions3)
+
+library(distributions3) # load package
+
+# The data
+x <- c(8.5, 9.3, 7.9, 9.2, 10.3)
+n<-length(x)
+
+  
+# t-student with 4 degrees of freedom
+T_4 <- StudentsT(df = 4)
+
+# 95% CI
+L1= mean(x) - quantile(T_4, 1-0.05 / 2) * sd(x) / sqrt(n)
+L2= mean(x) + quantile(T_4, 1 - 0.05 / 2) * sd(x) / sqrt(n)
+# 
+
+L1 #7.917
+L2 # 10.163
+
+```
+
+
+
+
+## Graphs
+
+### Histograms
+
+```{r}
+x <- my_data$weight
+
+hist(x, freq=F, col="red", breaks = 5)
+
+help("hist")
+
+```
+
+
+### Grouped histograms
+```{r}
+
+hist(my_data$weight, breaks="FD", col="green", main="Histogram of weight")
+hist(my_data$weight[my_data$group=="Man"], breaks="fd", col="gray", add=TRUE)
+legend("topright", c("Woman","Man"), fill=c("green","gray"))
+
+
+```
+
+## Other graphs
+
+See other lectures where the data is visualized with appropriate graphs before each statistical model. 
+
+
+
+## Exploring the workspace
+
+```{r}
+objects() # Lists the objects in the workspace
+ls() # Same as objects()
+remove() # Remove objects from the workspace
+rm(list=ls()) #clearing memory space
+search() # Shows the loaded packages
+library() # Shows the installed packages
+dir() # show files in the working directory
+```
+
+
+## References
+
+(https://www.rdocumentation.org/packages)
+
+http://www.sthda.com/english/wiki/running-rstudio-and-setting-up-your-working-directory-easy-r-programming
+
+http://www.stat.auckland.ac.nz/~paul/RGraphics/rgraphics.html
+
+http://addictedtor.free.fr/graphiques/
+
+http://addictedtor.free.fr/graphiques/thumbs.php?sort=votes
+
+http://www.statmethods.net/advgraphs/layout.html
+
+http://socserv.mcmaster.ca/jfox/
+
+Quick R http://www.statmethods.net/
+
+UCLA Resources to learn and use R http://www.ats.ucla.edu/stat/R/
+
+https://www.r-bloggers.com
+
+https://statistics.laerd.com/

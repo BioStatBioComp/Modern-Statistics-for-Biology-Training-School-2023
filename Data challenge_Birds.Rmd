@@ -1,0 +1,60 @@
+---
+title: "Data_Challenge_Birds"
+author: "Eliana Ibrahimi, Alise Ponsero, Marta B. Lopes"
+date: "2023-10-16"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## The problem
+
+Population sizes of many wild birds vary from year to year. Large-scale population surveys are a unique method to follow and assess wild birds populations, and determine if some species are at risk. For example, FeederWatch data from Florida showed that the winter population of the Painted Bunting declined steadily since the 1980s. This information, led the Florida Game and Fresh Water Fish Commission to begin a systematic monitoring program of bunting populations so they could learn how to protect them.
+
+Using long term monitoring data and intensive research projects, scientists understand why a species is declining, and to make recommendations for its recovery before it is too late. In particular, assessing what environment characteristics is associated to a larger bird population and diversity allow to make recommendations to improve parcs and natural habitat management.
+
+[In this project, we want to assess the relationship between the number of birds observed and the habitat description variables.]{.underline}
+
+## The dataset
+
+FeederWatch is a November-April survey of birds that visit backyards, community areas, and other locales in the USA and Canada. Every year, hundreds of citizen scientists observe and count birds visiting bird feeders then enter their counts online. This allows anyone to track what is happening to birds around their home and to contribute to a continental data-set of bird distribution and abundance.
+
+FeederWatch data show how many birds and how many different bird species visit feeders at thousands of locations across the continent every winter. The data also indicate the characteristics of the location and allow to understand what attracts birds during the winter.
+
+Read more about FeederWatch : https://feederwatch.org/about/project-overview/ 
+
+#### Variables definitions
+
+- loc_id: Identifier for the location where the observation was done
+- Country : Country of observation
+- State : State of observation
+- Month : Month of observation
+- *nb_birds* : number of birds observed
+- *nb_species* : number of species observed
+- loc_type : General type of habitat
+- cats: number of cats in the immediate proximity of the feeder
+- dogs: number of dogs in the immediate proximity of the feeder
+- nb_trees : number of trees in the immediate proximity of the feeder
+- brsh_piles : number of small brushes in the immediate proximity of the feeder
+- water_srcs : number of water sources in the immediate proximity of the feeder
+- bird_baths : number of bird baths in the immediate proximity of the feeder
+- nearby_feeders : number of other feedes in the surroundings
+- housing_density : number of housing in the immediate surroundings
+- fed_yr_round : the bird feeder is present all year long
+
+
+```{r}
+#Load the data
+data_bird=read.csv("data_birds_msb.csv")
+data_bird
+```
+
+### The challenge
+
+Load and explore the dataset. Assess if the number of bird observed is significantly different according to the main habitat (loc_type variable).
+
+What are the environment variables that are most associated with the number of birds observed? Hint: Do you expect these variables to have the same importance in different habitat? 
+

@@ -1,0 +1,180 @@
+---
+title: "Hand-on part 2: Classification Decision trees"
+output: html_document
+date: "2023-10-11"
+---
+
+### Installation, 
+
+run this part only once!
+
+```{r setup, include=FALSE}
+install.packages("tidyverse") # manipulating data
+install.packages("tidymodels") # training models data
+install.packages("vip") # explore variables
+install.packages("skimr") # data visualization
+install.packages("rpart.plot") # tree visualization
+```
+
+### Let's get started
+
+```{r setup, include=FALSE}
+library(tidyverse) # manipulating data
+library(tidymodels) # training models data
+library(vip) # explore variables
+library(skimr) # data visualization
+library(rpart.plot) # tree visualization
+```
+
+## Part 2 : Classification tree - example
+
+Let's revisit the Boston housing dataset, this time to train a classification tree! Instead of trying to train the model to predict the house value price, we will train a model to predict if the price is above or below the global median price of the area.
+
+```{r}
+# Load and explore the Boston Housing dataset
+Boston <- read_csv("Boston_housing.csv") %>% 
+  mutate(price_cat=ifelse(medv>22.5, "above", "below")) %>%
+  select(-medv)
+
+Boston %>% 
+  modify_if(is.character, as.factor) %>%  # convert character vars to factors
+  skim()
+```
+
+### Training a Classification tree
+
+As previously, we start by splitting our dataset into a training and a testing dataset.
+
+```{r}
+# Split the data into training and testing sets
+set.seed(123)
+Boston$price_cat <- as.factor(Boston$price_cat)
+data_split <- initial_split(Boston, prop = 0.75)
+train_data <- training(data_split)
+test_data <- testing(data_split)
+```
+
+Then, we specify the type of model we want to train. Note that this time the model is a "Classification model".
+
+```{r}
+# Create a decision tree model specification
+tree_spec <- decision_tree() %>%
+ set_engine("rpart") %>%
+ set_mode("classification")
+
+# Fit the model to the training data
+tree_fit <- tree_spec %>%
+ fit(price_cat ~ ., data = train_data)
+```
+
+### Evaluating a regression tree
+
+Easy Peasy! Now let's assess how well our model is doing, using the test dataset. We'll use three classic metric, the recall, the precision and the accuracy.
+- Recall: How many of the "Above median price" neighborhood were correctly classified as "Above median price". 
+- Precision: How many of the neighborhood that the model classified as "Above median price" were indeed "Above the median price"
+- Accuracy: How many neighborhood are correctly classified by the model
+
+```{r}
+# Make predictions on the testing data
+predictions <- tree_fit %>%
+ predict(test_data) %>%
+ pull(.pred_class)
+
+# Calculate recall, precision and accuracy
+metrics <- metric_set(recall, precision, accuracy)
+model_performance <- test_data %>%
+ mutate(predictions = predictions) %>%
+ metrics(truth = price_cat, estimate = predictions)
+
+print(model_performance)
+```
+
+### Understanding the decision tree
+
+```{r}
+# Plot the decision tree
+rpart.plot(tree_fit$fit, type = 4, extra = 101, under = TRUE, cex = 0.8, box.palette = "auto", roundint=FALSE)
+```
+
+```{r}
+# Create a variable importance plot
+var_importance <- vip::vip(tree_fit, num_features = 10)
+print(var_importance)
+```
+
+## Part 2 : Classification tree - Your turn!
+
+It is your turn to train a Classification model! This dataset is the Central Park Squirrel Census dataset, collected in Central Park, NY every year by citizen scientists. The citizen scientists observe the Squirrel population in the park and their behaviour. In particular, we will try to see if we can predict when a Squirrel will approach a human, seeking for food.
+
+Variables description: 
+- Shift: Value is either "AM" or "PM," to communicate whether or not the sighting session occurred in the morning or late afternoon.
+- Age: Value is either "Adult" or "Juvenile."
+- Primary Fur Color: Primary Fur Color - value is either "Gray," "Cinnamon" or "Black."
+- Location: Value is either "Ground Plane" or "Above Ground." Sighters were instructed to indicate the location of where the squirrel was when first sighted.
+- Running: Squirrel was seen running.
+- Chasing: Squirrel was seen chasing another squirrel.
+- Climbing: Squirrel was seen climbing a tree or other environmental landmark.
+- Eating: Squirrel was seen eating.
+- Foraging: Squirrel was seen foraging for food.
+- Kuks: Squirrel was heard kukking, a chirpy vocal communication used for a variety of reasons.
+- Quaas: Squirrel was heard quaaing, an elongated vocal communication which can indicate the presence of a ground predator such as a dog.
+- Moans: Squirrel was heard moaning, a high-pitched vocal communication which can indicate the presence of an air predator such as a hawk.
+- Tail flags: Squirrel was seen flagging its tail. Flagging is a whipping motion used to exaggerate squirrel's size and confuse rivals or predators. Looks as if the squirrel is scribbling with tail into the air.
+- Tail twitches:	Squirrel was seen twitching its tail. Looks like a wave running through the tail, like a breakdancer doing the arm wave. Often used to communicate interest, curiosity.
+*- Approaches: Squirrel was seen approaching human, seeking food.*
+
+
+
+```{r}
+mysquirrel_data <- read_csv("Squirrel_dataset.csv") %>%
+  modify_if(is.character, as.factor)
+
+mysquirrel_data %>% 
+  modify_if(is.character, as.factor) %>%
+  skim()
+```
+
+### Training a Classification tree
+
+Now, you need to split your dataset into training and testing!
+
+```{r}
+# Split the data into training and testing sets
+## Your code here
+```
+
+Specify your model and train it!
+
+```{r}
+# Create a decision tree model specification
+## Your code here
+
+# Fit the model to the training data
+## Your code here
+```
+
+### Evaluating a regression tree
+
+Let's evaluate using the test set. As previously, look at recall, precision and accuracy!
+
+```{r}
+# Make predictions on the testing data
+## Your code here
+
+# Calculate recall, precision and accuracy
+## Your code here
+```
+
+### Understanding the decision tree
+
+Finally, look at the tree and determine what are the variables that are most informative if we want to know if a cute squirrel will approach us!
+
+```{r}
+# Plot the decision tree
+## Your code here
+```
+
+```{r}
+# Create a variable importance plot
+## Your code here
+```

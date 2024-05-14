@@ -1,0 +1,103 @@
+---
+title: "Multivariate Analysis in R"
+author: "Eliana ibrahimi"
+date: "2023-10-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Practical
+
+In this part, we will focus on how to do PCA and how to read the PCA plot. As example we will be using data from this paper["Single-Cell RNA-Seq Reveals Lineage and X Chromosome Dynamics in Human Preimplantation Embryos"](https://doi.org/10.1016/j.cell.2016.03.023). In the preimplantation embryos, cells transform from being one type to becoming three types at day 5. We will use data from Table S2. They listed gene expression for around 100 specific genes for each cell type (lineage variable: EPI=1, PE=2, TE=3) for several days.
+
+```{r}
+ #Read the data
+
+#Make sure you set the working directory first, and that the data is stored in your working directory folder.
+
+library(readr)
+
+data=read.csv("cell.data.csv")
+
+print(data)
+```
+
+```{r}
+
+#intall packages 
+
+#install.packages(c("factoextra", "FactoMineR"))
+
+#load
+library("factoextra")
+library("FactoMineR")
+
+
+```
+
+```{r}
+
+
+pca.data <- PCA(data[,3:14], scale.unit = TRUE, graph = FALSE) #select numeric columns
+
+fviz_eig(pca.data, addlabels = TRUE, ylim = c(0, 70))
+
+fviz_pca_var(pca.data, col.var = "cos2",
+             gradient.cols = c("#FFCC00", "#CC9933", "#660033", "#330033"),
+             repel = TRUE) 
+```
+
+```{r}
+pca.data <- PCA(t(data[,3:14]), scale.unit = TRUE, graph = FALSE)
+
+fviz_pca_ind(pca.data, col.ind = "cos2", 
+                  gradient.cols = c("#FFCC00", "#CC9933", "#660033", "#330033"), 
+                  repel = TRUE)
+```
+
+```{r}
+
+library(ggpubr)
+
+a <- fviz_pca_ind(pca.data, col.ind = "cos2", 
+                  gradient.cols = c("#FFCC00", "#CC9933", "#660033", "#330033"), 
+                  repel = TRUE)
+
+ggpar(a,
+      title = "Principal Component Analysis",
+      xlab = "PC1", ylab = "PC2",
+      legend.title = "Cos2", legend.position = "top",
+      ggtheme = theme_minimal())
+```
+
+Biplot
+
+```{r}
+pca.data <- PCA(data[,3:14], scale.unit = TRUE,ncp = 2, graph = FALSE)
+
+data$lineage <- as.factor(data$lineage) 
+
+```
+
+```{r}
+#install.packages("RColorBrewer")
+library(RColorBrewer)
+nb.cols <- 3
+mycolors <- colorRampPalette(brewer.pal(3, "Set1"))(nb.cols)
+
+a <- fviz_pca_ind(pca.data, col.ind = data$lineage,
+                  palette = mycolors, addEllipses = TRUE)
+
+ggpar(a,
+      title = "Principal Component Analysis",
+      xlab = "PC1", ylab = "PC2",
+      legend.title = "Cell type", legend.position = "top",
+      ggtheme = theme_minimal())
+
+```
+
+
+

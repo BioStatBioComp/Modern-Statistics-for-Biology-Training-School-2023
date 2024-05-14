@@ -1,0 +1,408 @@
+---
+title: "Clustering"
+output: html_document
+date: "2023-10-16"
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+Unsupervised Classification: Clustering
+
+{r} set.seed(123) library(cluster)\
+library(factoextra)
+
+{r} data=iris head(iris) tail(iris)
+
+Euclidean - complete linkage
+
+{r} data[, 3:4] dd=dist(data[, 3:4], method = "euclidean") round(dd,2)
+
+clusters = hclust(dd,method = "complete") clusters plot(clusters)
+
+cut = cutree(clusters, 3) cut table(cut, data\$Species)
+
+{r} rect.hclust(clusters , k = 3, border = 2:6)
+
+{r}
+
+library(ggplot2) names(data) names(data)[3] names(data)[4]
+
+attach(data)
+
+{r} p = ggplot(data, aes(Petal.Length, Petal.Width)) p +
+geom_point(aes(colour = factor(Species)), size = 4) + ggtitle("Real Iris
+Categories")
+
+p = ggplot(data, aes(Petal.Length, Petal.Width)) p +
+geom_point(aes(colour = factor(cut)), size = 4) + ggtitle("Clustering
+Results")
+
+# a = ggplot(data, aes(factor(Species)))
+
+# a + geom_bar(aes(fill = factor(Species)))
+
+fviz_cluster(list(data = data[, 3:4], cluster = cut))
+
+Minkowski - average linkage
+
+{r} dd=dist(data[, 3:4], method = "minkowski", p = 3) round(dd,2)
+
+clusters = hclust(dd,method = "average") clusters plot(clusters)
+
+cut = cutree(clusters, 3) cut table(cut, data\$Species)
+rect.hclust(clusters , k = 3, border = 2:6)
+
+p = ggplot(data, aes(Petal.Length, Petal.Width)) p +
+geom_point(aes(colour = factor(Species)), size = 4) + ggtitle("Real Iris
+Categories")
+
+p = ggplot(data, aes(Petal.Length, Petal.Width)) p +
+geom_point(aes(colour = factor(cut)), size = 4) + ggtitle("Clustering
+Results")
+
+# manhattan - simple linkage
+
+dd=dist(data[, 3:4], method = "manhattan") dd
+
+clusters = hclust(dd,method = "single") clusters plot(clusters)
+
+cut = cutree(clusters, 3) cut table(cut, data\$Species)
+rect.hclust(clusters , k = 3, border = 2:6)
+
+p = ggplot(data, aes(Petal.Length, Petal.Width)) p +
+geom_point(aes(colour = factor(Species)), size = 4) + ggtitle("Real Iris
+Categories")
+
+p = ggplot(data, aes(Petal.Length, Petal.Width)) p +
+geom_point(aes(colour = factor(cut)), size = 4) + ggtitle("Clustering
+Results")
+
+data normalization
+
+{r} library(BBmisc)
+
+?normalize ?scale normalize(data) \# or normalize(data, method="range",
+range=c(0,1))
+
+library(mlr) ?impute \# out of the scope of this course
+
+any(is.na(data))
+
+Genomic data
+
+{r} install.packages("plsgenomics") library(plsgenomics)
+
+# data(Colon) \# sample x genes
+
+data(leukemia) \# patient x genes
+
+?leukemia
+
+attach(leukemia) leukemia\$gene.names
+
+class(leukemia) \# not a dataframe dim(leukemia$X) head(leukemia$X)
+leukemia\$X[,1]
+
+dd=dist(leukemia\$X, method = "manhattan") dd
+
+clusters = hclust(dd,method = "average") clusters plot(clusters)
+
+cut = cutree(clusters, 2) cut table(cut, leukemia\$Y)
+rect.hclust(clusters, k = 2, border = 2:3)
+
+# leukemia$Y==cut # sum(leukemia$Y==cut)/length(leukemia\$Y)
+
+#plot groups using first 2 dimensions fviz_cluster(list(data =
+leukemia\$X, cluster = cut))
+
+Compute divisive hierarchical clustering
+
+{r}
+
+?diana
+
+data=iris data[, 3:4]
+
+# euclidean
+
+dd=dist(data[, 3:4], method = "euclidean") round(dd,2)
+
+clusters \<- diana(data)
+
+print(clusters) plot(clusters) \# bannerplot Draws a "banner", i.e.
+basically a horizontal barplot visualizing the (agglomerative or
+divisive) hierarchical clustering or an other binary dendrogram
+structure.
+
+# Divise coefficient; amount of clustering structure found
+
+# a divisive coefficient (DC) closer to one suggests stronger group distinctions.
+
+# it's justa mean of banner lengths
+
+clusters\$dc
+
+Number of groups
+
+{r} data=data[, 3:4] \# 2 variables from iris dataset
+
+# Plot cluster results
+
+p1 \<- fviz_nbclust(data, FUN = hcut, method = "wss", k.max = 10) +
+ggtitle("(A) Elbow method") p2 \<- fviz_nbclust(data, FUN = hcut, method
+= "silhouette", k.max = 10) + ggtitle("(B) Silhouette method") p3 \<-
+fviz_nbclust(data, FUN = hcut, method = "gap_stat", k.max = 10) +
+ggtitle("(C) Gap statistic")
+
+# Display plots side by side
+
+gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
+
+the heatmap() function
+
+{r} ?heatmap
+
+heatmap(leukemia\$X,scale = "column",xlab = "Genes", ylab = "Patients",
+main = "Leukemia heatmap")
+
+leukemia\$Y==2
+
+Circular Dendrogram
+
+{r} library(dendextend) library(circlize)
+
+?as.dendrogram
+
+dd=dist(data[, 3:4], method = "euclidean")
+
+clusters = hclust(dd,method = "ave")
+
+dend \<- as.dendrogram(clusters)
+
+dend \<- color_branches(dend, k=3) #, groupLabels=iris_species)
+
+circlize_dendrogram(dend)
+
+Interactive heatmap
+
+{r} gplots::heatmap.2(as.matrix(data[,1:4]),scale = c("row"))
+library(d3heatmap) d3heatmap::d3heatmap(as.matrix(data[,1:4]),
+dendrogram = "row", Rowv = dend, colors = "Greens", \# scale = "row",
+width = 900, height = 700, show_grid = T)
+
+ggpubr-ggarrange
+
+{r} geom_boxplot(outlier.colour="black", outlier.shape=16,
+outlier.size=4, notch=FALSE)
+
+p1 \<- ggplot(iris, aes(x=Species, y=Sepal.Length, fill=Species)) +
+geom_boxplot() \# p1 + theme(legend.position="bottom")
+
+p2 \<- ggplot(iris, aes(x=Species, y=Sepal.Width, fill=Species)) +
+geom_boxplot() \# p2 + theme(legend.position="bottom")
+
+p3 \<- ggplot(iris, aes(x=Species, y=Petal.Length, fill=Species)) +
+geom_boxplot() \# p3 + theme(legend.position="bottom")
+
+p4 \<- ggplot(iris, aes(x=Species, y=Petal.Width, fill=Species)) +
+geom_boxplot() \# p4 + theme(legend.position="bottom")
+
+install.packages("ggpubr") library(ggpubr)
+
+ggarrange(p1,p2,p3,p4 + rremove("x.text"), labels = c("A", "B",
+"C","D"), ncol = 2, nrow = 2)
+
+Clustering COVID-19
+
+{r} COVID_ITA_REG \<- read.csv("COVID_ITA_REG.csv") View(COVID_ITA_REG)
+
+COVID_ITA_REG\$denominazione_regione[1:21]
+
+data=COVID_ITA_REG
+
+# class(COVID_ITA_REG)
+
+# write.csv(COVID_ITA_REG,"C:\\Users\\Fabma\\Desktop\\COVID_ITA_REG.csv",row.names = FALSE)
+
+data$denominazione_regione=as.factor(data$denominazione_regione)
+levels(data\$denominazione_regione)
+
+# rename trento and bolzano to avoid different order later
+
+levels(data$denominazione_regione)[levels(data$denominazione_regione)=="P.A.
+Trento"] \<- "Trento"
+levels(data$denominazione_regione)[levels(data$denominazione_regione)=="P.A.
+Bolzano"] \<- "Bolzano" levels(data\$denominazione_regione)
+
+dim(data) days=nrow(data)/21 \# we have 21 regions and 27 time
+observations (days) nreg=length(levels(data\$denominazione_regione)) \#
+21 regions
+
+contagiati=matrix(NA,nreg,days) \# temp matrix to fill with regions by
+time points dim(contagiati)
+
+length(data\$totale_casi) \# the column to use
+
+seq(1,567,by=nreg) \# where are the observations of the first region?
+
+# we put the observations of the region i in the row i
+
+for(i in 1:nreg) contagiati[i,]=data\$totale_casi[seq(i,567,by=nreg)]
+
+contagiati contagiati=as.data.frame(contagiati) \# this is oure dataset
+with the timeseries
+
+colnames(contagiati)=c(1:days)
+rownames(contagiati)=COVID_ITA_REG\$denominazione_regione[1:21]
+
+contagiati \# this is oure dataset with the timeseries
+
+############### clustering
+
+dd=dist(contagiati, method = "euclidean") round(dd,2)
+
+clusters = hclust(dd,method = "ave") clusters plot(clusters)
+
+?cutree cut = cutree(clusters, 2) cut
+
+rect.hclust(clusters , k = 2, border = 2:3)
+
+# Plot cluster results
+
+p1 \<- fviz_nbclust(contagiati, FUN = hcut, method = "wss", k.max =
+10) + ggtitle("(A) Elbow method") p2 \<- fviz_nbclust(contagiati, FUN =
+hcut, method = "silhouette", k.max = 10) + ggtitle("(B) Silhouette
+method") p3 \<- fviz_nbclust(contagiati, FUN = hcut, method =
+"gap_stat", k.max = 10) + ggtitle("(C) Gap statistic")
+
+# Display plots side by side
+
+gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
+
+K-means
+
+{r} \############# iris with 2 variables
+
+iris data=iris[,3:4]
+
+?scale data=scale(data) data=as.data.frame(data)
+
+head(iris,15) tail(iris)
+
+?kmeans kk=kmeans(data, centers = 3, iter.max = 10, nstart = 1)
+
+kk kk$centers # A matrix of cluster centres. kk$cluster kk\$iter
+
+kk$withinss # Vector of within-cluster sum of squares, one component per cluster. kk$tot.withinss
+\# Total within-cluster sum of squares, i.e. sum(withinss).
+kk$betweenss # The between-cluster sum of squares, i.e. totss-tot.withinss. kk$totss
+\# The total sum of squares.
+
+p = ggplot(data, aes(Petal.Length, Petal.Width)) p +
+geom_point(aes(colour = factor(Species)), size = 4) + ggtitle("Real Iris
+Categories")
+
+p = ggplot(data, aes(Petal.Length, Petal.Width)) p +
+geom_point(aes(colour = factor(kk\$cluster)), size = 4) +
+ggtitle("K-means Results")
+
+?fviz_cluster fviz_cluster(kk, data,ellipse.type = "norm")
+
+Genomic data
+
+{r} library(plsgenomics)
+
+data(leukemia) \# patient x genes
+
+scaled_leukemia=scale(leukemia\$X)
+scaled_leukemia=as.data.frame(scaled_leukemia)
+
+attach(scaled_leukemia)
+
+leukemia_kk=kmeans(leukemia\$X, centers = 5, iter.max = 50, nstart = 1)
+
+leukemia_kk leukemia_kk$cluster leukemia_kk$iter
+leukemia_kk\$tot.withinss
+
+fviz_cluster(leukemia_kk, leukemia\$X)
+
+# check the number of groups
+
+p1 \<- fviz_nbclust(scaled_leukemia, kmeans, method = "wss", k.max =
+10) + ggtitle("(A) Elbow method") p2 \<- fviz_nbclust(scaled_leukemia,
+kmeans, method = "silhouette", k.max = 10) + ggtitle("(B) Silhouette
+method") p3 \<- fviz_nbclust(scaled_leukemia, kmeans, method =
+"gap_stat", k.max = 10) + ggtitle("(C) Gap statistic")
+
+# Display plots side by side
+
+gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
+
+# new with only 2 groups plotted on first 2 PC
+
+leukemia_kk=kmeans(leukemia\$X, centers = 2, iter.max = 50, nstart = 1)
+
+leukemia_kk leukemia_kk$cluster leukemia_kk$iter
+leukemia_kk\$tot.withinss
+
+fviz_cluster(leukemia_kk, leukemia\$X)
+
+############################################################################ 
+
+################################# PAM
+
+############################################################################ 
+
+leukemia_pam=pam(leukemia\$X, 2, metric = "euclidean", stand = FALSE)
+class(pam)
+
+leukemia_pam$clusinfo leukemia_pam$id.med leukemia_pam\$clustering
+
+fviz_cluster(leukemia_pam, leukemia\$X)
+
+############################################################################ 
+
+################################# CLARA
+
+############################################################################ 
+
+?clara
+
+leukemia_clara=clara(leukemia\$X, 2, metric = "euclidean", stand =
+FALSE, samples = 5)
+
+fviz_cluster(leukemia_clara, leukemia\$X)
+
+Fuzzy K-means
+
+{r} library(cluster) library(fclust) library(factoextra)
+library(FactoMineR)
+
+library(sjPlot) library(dplyr) library(ggplot2) library(stats)
+library(e1071)
+
+# load the data
+
+# <https://www.dropbox.com/s/i45v8t995uc70jh/BES_2015.xlsx?dl=0>
+
+library(readxl) BES_2015 \<- read_excel("BES_2015.xlsx") View(BES_2015)
+
+data=data.frame(BES_2015)\
+attach(data)
+
+dim(data) summary(data) data
+
+rownames(data)=data[,1] data=data[,-1]
+
+data2015=dplyr::select(data, contains("2015")) data2015
+
+# descriptive stats
+
+# sjt.df(data2015, describe = TRUE, string.var = "Observation") #deprecated
+
+sjt.corr(data2015,corr.method="pearson")
+
+The choice of the number of groups
+
+{r}

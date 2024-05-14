@@ -1,0 +1,241 @@
+---
+title: "Multiple linear regression"
+author: "Eliana ibrahimi"
+date: "2023-10-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Dataset
+
+Data from the [Maryland Biological Stream Survey](http://dnr.maryland.gov/streams/Pages/mbss.aspx)
+
+The dependent variable is the number of longnose dace (*Rhinichthys cataractae*) per 75-meter section of stream (fish).
+
+The independent variables are the area (in acres) drained by the stream; the dissolved oxygen (in mg/liter); the maximum depth (in cm) of the 75-meter segment of the stream; nitrate concentration (mg/liter); sulfate concentration (mg/liter); and the water temperature on the sampling date (in degrees C), and hardness (\<45=0 mg equivalent CACO3/L and \>45=1), as dummy variable. A dummy variable is a numerical variable that is used in a regression analysis to "code" for a binary categorical variable.
+
+Biological goal might be to measure the physical and chemical characteristics of a stream and be able to predict the abundance of longnose dace; another goal might be to generate hypotheses about the causes of variation in longnose dace abundance.
+
+### Read the data in R
+
+```{r}
+library(readr)
+fish_data <- read_csv("fish_data.csv")
+fish_data$hardness=as.factor(fish_data$hardness)
+
+```
+
+#### Explore the data
+
+##### Linear relationship
+
+```{r}
+ ## Scatterplot
+pairs(fish_data, pch = 18, col = "steelblue")
+
+## Boxplot of response/dependent variable
+
+boxplot(fish_data$fish)
+
+#We could remove the extreme outliers
+
+ #fish_data2=subset(fish_data, fish<160)
+
+ boxplot(fish_data2$fish)
+```
+
+```{r}
+
+#install.packages(plot3D)
+library(plot3D)
+attach(fish_data)
+
+y=fish
+x=acre
+z=no3
+
+# Create a scatter plot
+ scatter3D(x, y, z, phi = 0, bty = "g",
+        pch = 20, cex = 2, ticktype = "detailed")
+# Add another point (black color)
+scatter3D(x = 7, y = 3, z = 3.5, add = TRUE, colkey = FALSE, 
+         pch = 18, cex = 3, col = "black")
+
+
+# type ="h" for vertical lines
+scatter3D(x, y, z, phi = 0, bty = "g",  type = "h", 
+           ticktype = "detailed", pch = 19, cex = 0.5)
+
+
+```
+
+## Perform multiple linear regression
+
+### Building the model
+
+```{r }
+#Building the model 
+
+#attach(fish_data)
+
+lm<-lm(fish ~ acre + do2 +	depth +	no3 +	so4 +	temp +	hardness, data = fish_data)
+
+summary(lm)
+
+confint(lm) #extract CI of the coefficients
+```
+
+##Model selection based on AIC
+
+```{r}
+##Model selection based on AIC
+library(MASS)
+lm2 <- stepAIC(lm)
+lm2$anova
+```
+
+### Fit the final model
+
+```{r}
+#Fit the final model
+lm_final<-lm(fish ~ acre + depth + no3 + hardness, data=fish_data)
+summary(lm_final)
+```
+
+## Check Model assumptions
+
+#### Normality of residuals
+
+```{r}
+# Get the model residuals
+model_residuals = lm_final$residuals
+
+# Plot the result
+hist(model_residuals)
+```
+
+The histogram looks skewed to the left; hence we can not conclude the normality with enough confidence. Instead of the histogram, let's look at the residuals along the normal Q-Q plot. If there is normality, then the values should follow a straight line.
+
+```{r}
+# Plot the residuals
+qqnorm(model_residuals)
+# Plot the Q-Q line
+qqline(model_residuals)
+```
+
+From the plot, we can observe that a few portions of the residuals do not lie in a straight line. Then we can not surely assume that the residuals of the model do not follow a normal distribution.
+
+```{r}
+shapiro.test(model_residuals)
+#not normally distribted
+```
+
+#### Multicollinearity assumption check
+
+```{r}
+# Install and load the ggcorrplot package
+#install.packages("ggcorrplot")
+library(ggcorrplot)
+
+# Remove the Customer Value column
+reduced_data <- subset(fish_data, select = -fish)
+# To avoid an error we need to have hardness as numeric
+reduced_data$hardness=as.numeric(reduced_data$hardness)
+
+# Compute correlation at 2 decimal places
+corr_matrix = round(cor(reduced_data), 2)
+
+# Compute and show the  result
+ggcorrplot(corr_matrix, hc.order = TRUE, type = "lower",
+          lab = TRUE)
+```
+
+No strong correlation among predictors (i.e., \>\|0.7\|)
+
+##### **Another way to do this...**
+
+```{r}
+#install and load the GGally library
+#install.packages("GGally")
+library(GGally)
+
+#generate the pairs plot
+ggpairs(reduced_data)
+```
+
+### Check for homoskedasticity
+
+The variance of the residuals should be consistent for all observations. This preferred condition is known as homoskedasticity. Violation of this assumption is known as [heteroskedasticity](https://www.statology.org/understanding-heteroscedasticity-in-regression-analysis/).
+
+To check if this assumption is met we can create a *fitted value vs. residual plot:*
+
+```{r}
+#create fitted value vs residual plot
+plot(fitted(lm_final), residuals(lm_final))
+
+#add horizontal line at 0
+abline(h = 0, lty = 2)
+```
+
+Ideally we would like the residuals to be equally scattered at every fitted value. We can see from the plot that the scatter tends to become a bit larger for larger fitted values, but this pattern isn't extreme enough to cause too much concern.
+
+## Interpreting the results of the model
+
+```{r}
+#Fit again the final model
+lm_final<-lm(fish ~ acre + depth + no3 + hardness, data=fish_data)
+summary(lm_final)
+```
+
+-   Model: fish abundance = -3.225 + 0.00177(acre) + 0.384(depth) + 7.164 (no3) - 0.357 (hardness_high)
+
+-   The overall F-statistic of the model is 11.42 and the corresponding p-value is **4.931e-07**. This indicates that the overall model is statistically significant. In other words, the regression model as a whole is useful.
+
+-   acre is statistically significant at the 0.01 significance level. In particular, the coefficient from the model output tells is that a one unit increase in acre is associated with a 0.00017 unit increase, on average, in number of fish, assuming other predictors are held constant.
+
+-   depth is statistically significant at the 0.05 significance level. In particular, the coefficient from the model output tells is that a one unit increase in depth is associated with a 0.384 unit increase, on average, in fish abundance, assuming other predictors are held constant.
+
+-   Interpret yourself no3 ....
+
+-   hardness -3.576e+01 is the difference in fish abundance between a high level of hardness compared to the low level. The negative value indicates that the fish abundance is lower in high levels of hardness than in low levels of hardness.
+
+```{r}
+plot(fish_data$fish~fish_data$hardness)
+```
+
+### **Assessing the Goodness of Fit of the Model**
+
+To assess how "good" the regression model fits the data, we can look at a couple different metrics:
+
+**1. Multiple R-Squared**
+
+This measures the strength of the linear relationship between the predictor variables and the response variable. A multiple R-squared of 1 indicates a perfect linear relationship while a multiple R-squared of 0 indicates no linear relationship whatsoever.
+
+In this example, the multiple R-squared is 0.42. Adjusted R-squared is 0.3836. This indicates that **38.36%** of the variance in *fish abundance* can be explained by the predictors in the model.
+
+**Related:** [What is a Good R-squared Value?](https://www.statology.org/what-is-a-good-r-squared-value/)
+
+### **Using the Model to Make Predictions**
+
+```{r}
+#define new observation
+#0.00177(acre) + 0.384(depth) + 7.164 (no3) - 0.357 (hardness_high)
+newdata = data.frame(acre=5000, depth=150, no3=1.5, hardness="1")
+
+#use model to predict points value
+predict(lm_final, newdata)
+
+```
+
+Predicted fish abuncance is 38.24
+
+## Plot the predictions against the observed values
+
+```{r}
+predictions= predict(lm_final)
+
+plot(fish~predictions)
+```

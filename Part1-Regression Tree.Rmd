@@ -1,0 +1,212 @@
+---
+title: "Hands-on part 1: Regression Decision Trees"
+output: html_document
+date: "2023-10-11"
+---
+
+### Installation, 
+
+run this part only once!
+
+```{r setup, include=FALSE}
+install.packages("tidyverse") # manipulating data
+install.packages("tidymodels") # training models data
+install.packages("vip") # explore variables
+install.packages("skimr") # data visualization
+install.packages("rpart.plot") # tree visualization
+```
+
+### Let's get started
+
+```{r setup, include=FALSE}
+library(tidyverse) # manipulating data
+library(tidymodels) # training models data
+library(vip) # explore variables
+library(skimr) # data visualization
+library(rpart.plot) # tree visualization
+```
+
+## Part 1 : Regression tree - example
+
+First, let's explore an example of a Regression tree training. We will be using the Boston Housing dataset, which is a very classic dataset in Machine Learning, as the dataset is simple to understand and can be used to train a lot of different model types. It has commonly been used for benchmarking in popular machine learning libraries, including scikit-learn and OpenML. Importantly, the dataset contains variables enconding for systemic racism and class inequality in the US. If you want to read more about the dataset, it's history and why it is considered a biased dataset, I recommend reading this blog article: https://fairlearn.org/main/user_guide/datasets/boston_housing_data.html. 
+
+### Data exploration 
+
+First things first, let's load the dataset and display a summary of the variables.
+
+This dataset comes from a study by Harrison and Rubinfeld [Hedonic housing prices and the demand for clean air. Journal of environmental economics and management, 5(1):81–102, 1978] to illustrate the issues with the US housing market and its correlation with access to clean air. 
+
+The dataset shows the median price of housing in the Boston Standard Metropolitan Area, and the association between housing prices and socio-economical characteristics of the neighborhood. Additionall, nitric oxides concentration (NOX) in the air serves as a proxy for air quality.
+
+```{r}
+# Load and explore the Boston Housing dataset
+Boston <- read_csv("Boston_housing.csv")
+
+Boston %>% 
+  skim()
+```
+The dataset contains the following columns:
+
+CRIM: per capita crime rate by town
+ZN: proportion of residential land zoned for lots over 25,000 sq.ft.
+INDUS: proportion of non-retail business acres per town
+CHAS: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise)
+NOX: nitric oxides concentration (parts per 10 million)
+RM: average number of rooms per dwelling
+AGE: proportion of owner-occupied units built prior to 1940
+DIS: weighted distances to five Boston employment centers
+RAD: index of accessibility to radial highways
+TAX: full-value property-tax rate per $10,000
+PTRATIO: pupil-teacher ratio by town
+B: 1000(Bk - 0.63)^2 where Bk is the proportion of Black people by town
+LSTAT: % lower status of the population
+*MEDV: Median value of owner-occupied homes in $1000’s* 
+
+The goal of this short demonstration will be to train a decision tree to predict the median value of houses in an area according to its socio-economic characteristics.
+
+### Training a regression tree
+
+We first split the data into training (75% of the dataset) and testing sets (25% of the dataset).
+
+```{r}
+set.seed(123)
+data_split <- initial_split(Boston, prop = 0.75)
+train_data <- training(data_split)
+test_data <- testing(data_split)
+```
+
+Next we specify the model we want to train and fit the model to the data.
+
+```{r}
+# Create a decision tree model specification
+tree_spec <- decision_tree() %>%
+ set_engine("rpart") %>%
+ set_mode("regression")
+
+# Fit the model to the training data
+tree_fit <- tree_spec %>%
+ fit(medv ~ ., data = train_data)
+```
+
+### Evaluating a regression tree
+
+Now that we have a model trained, we can evaluate its' performances. We will calculate the root mean squared error (RMSE) and the R-squared value for our decision tree model on the testing data.
+
+- RMSE (Root Mean Squared Error): This measures the average difference between the predicted and true values. As an example, an RMSE of 3, means that, on average, the predictions made by the decision tree model are off by approximately 3 units from the true values. A lower RMSE value is generally better, as it indicates smaller prediction errors.
+
+- R-squared (R²): This measures how well the model explains the variance in the target variable. It ranges from 0 to 1, with a higher value indicating a better fit. As an example, an R² is 0.8, meaning the model explains approximately 80% of the variance in the target variable (MEDV).
+
+```{r}
+# Make predictions on the testing data
+predictions <- tree_fit %>%
+ predict(test_data) %>%
+ pull(.pred)
+
+# Calculate RMSE and R-squared
+metrics <- metric_set(rmse, rsq)
+model_performance <- test_data %>%
+ mutate(predictions = predictions) %>%
+ metrics(truth = medv, estimate = predictions)
+
+print(model_performance)
+```
+
+### Understanding the decision tree
+
+The most significant interest of decision trees is the interpretability of the decision tree models. Let’s visualize the decision tree to understand the model better:
+
+```{r}
+# Plot the decision tree
+rpart.plot(tree_fit$fit, type = 4, extra = 101, under = TRUE, cex = 0.8, box.palette = "auto")
+```
+
+```{r}
+# Create a variable importance plot
+var_importance <- vip::vip(tree_fit, num_features = 10)
+print(var_importance)
+```
+
+## Part 1 : Regression tree - Your turn!
+
+Now that you have trained a regression tree, it is time to train your own decision tree, almost by yourself!
+
+This second dataset is fluffy and drooly! The Dog dataset contains the characteristics of almost 200 dog breed and their popularity rank in 2022 in the US.
+
+### Data exploration 
+
+```{r}
+# Load and explore the Dog breed dataset
+mydataset <- read_csv("Dog_breeds.csv")
+
+mydataset %>%
+  select(-Breed) %>%  # remove Breed and irrelevant variables
+  modify_if(is.character, as.factor) %>%  # convert character vars to factors
+  skim()
+
+```
+
+variable descriptions: 
+- *Rank: Popularity Rank in 2022*
+- Breed: Dog Breed name
+- Affectionate With Family: Placement on scale of 1-5 for the breed's to be "Affectionate With Family"
+- Good With Young Children: Placement on scale of 1-5 for the breed's to be "Good With Young Children"
+- Good With Other Dogs: Placement on scale of 1-5 for the breed's to be "Good With Other Dogs"
+- Shedding Level:	Placement on scale of 1-5 for the breed's "Shedding Level"
+- Coat Grooming Frequency: Placement on scale of 1-5 for the breed's "Coat Grooming Frequency"
+- Drooling Level: Placement on scale of 1-5 for the breed's "Drooling Level"
+- Coat Type: Description of the breed's coat type
+- Coat Length:	Description of the breed's coat length
+- Openness To Strangers: Placement on scale of 1-5 for the breed's tendancy to be open to strangers
+- Playfulness Level: Placement on scale of 1-5 for the breed's tendancy to be playful
+- Watchdog/Protective Nature: Placement on scale of 1-5 for the breed's "Watchdog/Protective Nature"
+- Adaptability Level:	Placement on scale of 1-5 for the breed's to be adaptable
+- Trainability Level: Placement on scale of 1-5 for the breed's tendancy to be adaptable
+- Energy Level: Placement on scale of 1-5 for the breed's "Energy Level"
+- Barking Level: Placement on scale of 1-5 for the breed's "Barking Level"
+- Mental Stimulation Needs: Placement on scale of 1-5 for the breed's "Mental Stimulation Needs"
+
+### Training a regression tree
+
+Time to split the data into training and testing sets! Here, you'll need to first remove the breed name from the dataset before training the model.
+
+```{r}
+mydataset <- mydataset %>% select(-Breed) # This removes the Breed name from the dataset
+## put your code here
+```
+
+Now that you have your training and testing data, time to specify the model you want to train and fit it to your training data!
+
+```{r}
+# Create a decision tree model specification
+## put your code here
+
+# Fit the model to the training data
+## put your code here
+```
+
+### Evaluating a regression tree
+
+Whoohoo! Now it is time to see how well your model is doing in predicting the Dog's popularity rank according to the breeds traits.
+
+```{r}
+# Make predictions on the testing data
+## Your code here
+
+# Calculate RMSE and R-squared
+## Your code here
+```
+
+### Understanding the decision tree
+
+Let's finish by looking at what the decision tree learnt and what are the variables that are the most useful to predict how popular a dog breed is!
+
+```{r}
+# Plot the decision tree
+## Your code here
+```
+
+```{r}
+# Create a variable importance plot
+## Your code here
+```
+
